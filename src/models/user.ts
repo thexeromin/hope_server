@@ -4,7 +4,10 @@ export interface IUser extends Document {
   email: string;
   name: string;
   bloodGroup?: string;
-  location?: { lat: number; lon: number };
+  location?: {
+    type: "Point";
+    coordinates: [number, number]; // [longitude, latitude]
+  };
 }
 
 const userSchema: Schema<IUser> = new Schema(
@@ -13,8 +16,15 @@ const userSchema: Schema<IUser> = new Schema(
     name: { type: String, required: true },
     bloodGroup: { type: String },
     location: {
-      lat: { type: Number },
-      lon: { type: Number }
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point"
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        index: "2dsphere" // required for geo search
+      }
     }
   },
   { timestamps: true }
