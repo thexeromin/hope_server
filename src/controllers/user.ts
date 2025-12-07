@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
-import User from "../models/user";
+import { IUser } from "../models/user";
 
-export const setupUser = async (req: Request, res: Response) => {
+interface AuthRequest extends Request {
+  user?: IUser;
+}
+
+export const setupUser = async (req: AuthRequest, res: Response) => {
   try {
-    const { email, bloodGroup, location } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    const { bloodGroup, location } = req.body;
+    const user = req.user;
+    if (!user) return res.status(401).json({ error: "Unauthorized" });
 
     if (bloodGroup) user.bloodGroup = bloodGroup;
     if (location) user.location = location;

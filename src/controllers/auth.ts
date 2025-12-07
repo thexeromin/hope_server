@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { client } from "../config/googleClient";
 import User from "../models/user";
+import { signToken } from "../utils/jwt";
 
 export const googleAuth = async (req: Request, res: Response) => {
   try {
@@ -22,7 +23,9 @@ export const googleAuth = async (req: Request, res: Response) => {
       return res.json({ user, token, isNew: true });
     }
 
-    res.json({ user, token, isNew: false });
+    const jwtToken = signToken(user);
+
+    res.json({ user, token: jwtToken, isNew: false });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Authentication failed" });
