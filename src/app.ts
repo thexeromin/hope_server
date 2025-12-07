@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import authRoutes from "./routes/auth";
+import userRoutes from "./routes/user";
 
 dotenv.config();
 
@@ -15,5 +16,6 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api", authRoutes);
+app.use("/api", userRoutes);
 
 export default app;
