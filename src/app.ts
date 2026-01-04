@@ -15,7 +15,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello from server!");
 });
 
-app.use("/api", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
 
 export default app;

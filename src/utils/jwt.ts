@@ -1,3 +1,5 @@
+// TODO: remove this file
+
 import jwt from "jsonwebtoken";
 import { IUser } from "../models/user";
 import type { StringValue } from "ms";

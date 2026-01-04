@@ -1,8 +1,11 @@
 import { Router } from "express";
-import { googleAuth } from "../controllers/auth";
+import { authorize, callback, token, refresh } from "../controllers/auth";
 
 const router = Router();
 
-router.post("/google-login", googleAuth);
+router.get("authorize", authorize);
+router.get("callback", callback);
+router.post("token", token);
+router.post("refresh", refresh);
 
 export default router;
