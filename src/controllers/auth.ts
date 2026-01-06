@@ -14,13 +14,11 @@ import {
 
 export const authorize = async (req: Request, res: Response) => {
   if (!GOOGLE_CLIENT_ID) {
-    return Response.json(
-      { error: "Missing GOOGLE_CLIENT_ID environment variable" },
-      { status: 500 }
-    );
+    return res
+      .status(500)
+      .json({ error: "Missing GOOGLE_CLIENT_ID environment variable" });
   }
-
-  const url = new URL(req.url);
+  const url = new URL(req.url, `${req.protocol}://${req.get("host")}`);
   let idpClientId: string;
 
   const internalClient = url.searchParams.get("client_id");
@@ -35,23 +33,24 @@ export const authorize = async (req: Request, res: Response) => {
   if (internalClient === "google") {
     idpClientId = GOOGLE_CLIENT_ID;
   } else {
-    return Response.json({ error: "Invalid client" }, { status: 400 });
+    return res.status(400).json({ error: "Invalid client" });
   }
 
   // additional enforcement
   if (!state) {
-    return Response.json({ error: "Invalid state" }, { status: 400 });
+    return res.status(400).json({ error: "Invalid state" });
   }
 
   const params = new URLSearchParams({
     client_id: idpClientId,
-    // TODO: express app base url
     redirect_uri: BASE_URL + "/api/auth/callback",
     response_type: "code",
     scope: url.searchParams.get("scope") || "identity",
     state: state,
     prompt: "select_account"
   });
+
+  console.log("in auth redirecting");
 
   return res.redirect(GOOGLE_AUTH_URL + "?" + params.toString());
 };
@@ -70,18 +69,14 @@ export const callback = async (req: Request, res: Response) => {
     state
   });
 
-  // TODO: APP_SCHEME > BASE_URL used
-  return res.redirect(BASE_URL + "?" + outgoingParams.toString());
+  return res.redirect(APP_SCHEME + "?" + outgoingParams.toString());
 };
 
 export const token = async (req: Request, res: Response) => {
   const code = req.body.code;
 
   if (!code) {
-    return Response.json(
-      { error: "Missing authorization code" },
-      { status: 400 }
-    );
+    return res.status(400).json({ error: "Missing authorization code" });
   }
 
   const response = await fetch("https://oauth2.googleapis.com/token", {
@@ -99,10 +94,7 @@ export const token = async (req: Request, res: Response) => {
   const data = await response.json();
 
   if (!data.id_token) {
-    return Response.json(
-      { error: "Missing required parameters" },
-      { status: 400 }
-    );
+    return res.status(400).json({ error: "Missing required parameters" });
   }
 
   const userInfo = jose.decodeJwt(data.id_token) as object;
@@ -147,21 +139,16 @@ export const token = async (req: Request, res: Response) => {
     .sign(new TextEncoder().encode(JWT_SECRET));
 
   if (data.error) {
-    return Response.json(
-      {
-        error: data.error,
-        error_description: data.error_description,
-        message:
-          "OAuth validation error - please ensure the app complies with Google's OAuth 2.0 policy"
-      },
-      {
-        status: 400
-      }
-    );
+    return res.status(400).json({
+      error: data.error,
+      error_description: data.error_description,
+      message:
+        "OAuth validation error - please ensure the app complies with Google's OAuth 2.0 policy"
+    });
   }
 
   // For native platforms, return both tokens in the response body
-  return Response.json({
+  return res.json({
     accessToken,
     refreshToken
   });

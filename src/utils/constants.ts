@@ -4,8 +4,10 @@
  * This file centralizes all constants used across the application.
  * Import from this file instead of defining constants in individual files.
  */
+import dotenv from "dotenv";
 
 // Authentication Constants
+dotenv.config();
 export const COOKIE_NAME = "auth_token";
 export const REFRESH_COOKIE_NAME = "refresh_token";
 export const COOKIE_MAX_AGE = 20; // 20 seconds
