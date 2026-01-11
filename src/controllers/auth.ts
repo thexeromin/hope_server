@@ -11,6 +11,7 @@ import {
   JWT_SECRET,
   REFRESH_TOKEN_EXPIRY
 } from "../utils/constants";
+import User from "../models/user";
 
 export const authorize = async (req: Request, res: Response) => {
   if (!GOOGLE_CLIENT_ID) {
@@ -99,6 +100,16 @@ export const token = async (req: Request, res: Response) => {
 
   const userInfo = jose.decodeJwt(data.id_token) as object;
 
+  // Save new user in DB
+  let user = await User.findOne({ email: (userInfo as any).email });
+  if (!user) {
+    user = new User({
+      email: (userInfo as any).email,
+      name: (userInfo as any).name
+    });
+    await user.save();
+  }
+
   // Create a new object without the exp property from the original token
   const { exp, ...userInfoWithoutExp } = userInfo as any;
 
@@ -112,7 +123,11 @@ export const token = async (req: Request, res: Response) => {
   const jti = crypto.randomUUID();
 
   // Create access token (short-lived)
-  const accessToken = await new jose.SignJWT(userInfoWithoutExp)
+  const accessToken = await new jose.SignJWT({
+    ...userInfoWithoutExp,
+    bloodGroup: user?.bloodGroup,
+    address: user?.address
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(JWT_EXPIRATION_TIME)
     .setSubject(sub)
@@ -131,7 +146,9 @@ export const token = async (req: Request, res: Response) => {
     picture: (userInfo as any).picture,
     given_name: (userInfo as any).given_name,
     family_name: (userInfo as any).family_name,
-    email_verified: (userInfo as any).email_verified
+    email_verified: (userInfo as any).email_verified,
+    bloodGroup: user?.bloodGroup,
+    address: user?.address
   })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(REFRESH_TOKEN_EXPIRY)

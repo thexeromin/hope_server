@@ -4,6 +4,7 @@ export interface IUser extends Document {
   email: string;
   name: string;
   bloodGroup?: string;
+  address?: string;
   location?: {
     type: "Point";
     coordinates: [number, number]; // [longitude, latitude]
@@ -15,6 +16,7 @@ const userSchema: Schema<IUser> = new Schema(
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     bloodGroup: { type: String },
+    address: { type: String },
     location: {
       type: {
         type: String,
