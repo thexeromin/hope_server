@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../utils/jwt";
+import * as jose from "jose";
+import { JWT_SECRET } from "../utils/constants";
 import User from "../models/user";
 
 interface AuthRequest extends Request {
@@ -17,11 +18,14 @@ export const isAuthenticated = async (
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const token = authHeader.split(" ")[1];
+  const accessToken = authHeader.split(" ")[1];
 
   try {
-    const decoded = verifyToken(token);
-    const user = await User.findById(decoded.id);
+    const decoded = await jose.jwtVerify(
+      accessToken,
+      new TextEncoder().encode(JWT_SECRET)
+    );
+    const user = await User.findById(decoded.payload.email);
     if (!user) return res.status(401).json({ error: "User not found" });
 
     req.user = user; // attach user to request object
