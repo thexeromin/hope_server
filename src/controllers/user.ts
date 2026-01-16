@@ -23,11 +23,12 @@ interface SearchQuery {
 
 export const setupUser = async (req: AuthRequest, res: Response) => {
   try {
-    const { bloodGroup, location } = req.body;
+    const { bloodGroup, location, address } = req.body;
     const user = req.user;
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
     if (bloodGroup) user.bloodGroup = bloodGroup;
+    if (address) user.address = address;
 
     // Convert { lat, lon } to GeoJSON { type, coordinates }
     if (location && location.lat && location.lon) {

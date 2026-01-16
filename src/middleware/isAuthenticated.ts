@@ -25,7 +25,7 @@ export const isAuthenticated = async (
       accessToken,
       new TextEncoder().encode(JWT_SECRET)
     );
-    const user = await User.findById(decoded.payload.email);
+    const user = await User.findOne({ email: decoded.payload.email as string });
     if (!user) return res.status(401).json({ error: "User not found" });
 
     req.user = user; // attach user to request object
