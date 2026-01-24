@@ -3,6 +3,7 @@ import cors from "cors";
 
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/user";
+import bloodRequest from "./routes/bloodRequest";
 
 const app = express();
 app.use(cors());
@@ -15,5 +16,6 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
+app.use("/api", bloodRequest);
 
 export default app;
