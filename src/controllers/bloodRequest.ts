@@ -68,7 +68,7 @@ export const getBloodRequests = async (
 
     const requests = await BloodRequest.find(filter)
       .sort({ createdAt: -1 })
-      .populate("user", "name email")
+      .populate("user", "name email avatar")
       .limit(50);
 
     res.status(200).json({

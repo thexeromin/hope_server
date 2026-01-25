@@ -4,6 +4,7 @@ export interface IUser extends Document {
   email: string;
   name: string;
   bloodGroup?: string;
+  avatar?: string;
   address?: string;
   lastDonated?: Date;
   totalDonation: number;
@@ -18,6 +19,7 @@ const userSchema: Schema<IUser> = new Schema(
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     bloodGroup: { type: String },
+    avatar: { type: String },
     totalDonation: { type: Number, default: 0 },
     lastDonated: { type: Date },
     address: { type: String },

@@ -105,7 +105,8 @@ export const token = async (req: Request, res: Response) => {
   if (!user) {
     user = new User({
       email: (userInfo as any).email,
-      name: (userInfo as any).name
+      name: (userInfo as any).name,
+      avatar: (userInfo as any).picture
     });
     await user.save();
   }
