@@ -15,7 +15,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api", userRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api", bloodRequest);
 
 export default app;

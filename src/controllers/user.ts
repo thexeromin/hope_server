@@ -46,6 +46,69 @@ export const setupUser = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getUserStats = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.user!._id).select(
+      "bloodGroup totalDonation lastDonated"
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        bloodGroup: user.bloodGroup || "N/A",
+        totalDonation: user.totalDonation,
+        lastDonated: user.lastDonated
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const logDonation = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.user!._id);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Prevent spamming (e.g., allow only once every 1 months)
+    const oneMonthsAgo = new Date();
+    oneMonthsAgo.setMonth(oneMonthsAgo.getMonth() - 1);
+    if (user.lastDonated && user.lastDonated > oneMonthsAgo) {
+      return res
+        .status(400)
+        .json({ message: "You can only donate once every months." });
+    }
+
+    // Update Logic
+    user.totalDonation = (user.totalDonation || 0) + 1;
+    user.lastDonated = new Date(); // Set to Now
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Donation logged successfully!",
+      data: {
+        totalDonation: user.totalDonation,
+        lastDonated: user.lastDonated
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 export const searchUsers = async (
   req: Request<{}, {}, {}, SearchQuery>,
   res: Response

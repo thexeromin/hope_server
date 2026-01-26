@@ -1,9 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { BloodGroup } from "../types";
 
 export interface IUser extends Document {
   email: string;
   name: string;
-  bloodGroup?: string;
+  bloodGroup?: BloodGroup;
   avatar?: string;
   address?: string;
   lastDonated?: Date;
@@ -18,10 +19,13 @@ const userSchema: Schema<IUser> = new Schema(
   {
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
-    bloodGroup: { type: String },
+    bloodGroup: {
+      type: String,
+      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+    },
     avatar: { type: String },
     totalDonation: { type: Number, default: 0 },
-    lastDonated: { type: Date },
+    lastDonated: { type: Date, default: null },
     address: { type: String },
     location: {
       type: {
