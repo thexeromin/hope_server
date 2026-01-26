@@ -10,13 +10,25 @@ const BloodRequestSchema = new Schema<IBloodRequest>(
       enum: Object.values(BloodGroup),
       required: true
     },
-    location: { type: String, required: true },
-    city: { type: String, required: true, index: true },
+    address: { type: String, required: true },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: true
+      },
+      coordinates: {
+        type: [Number],
+        required: true
+      }
+    },
     phone: { type: String, required: true },
     neededBy: { type: Date, default: Date.now }
   },
   { timestamps: true }
 );
+
+BloodRequestSchema.index({ location: "2dsphere" });
 
 // Export the Model
 const BloodRequest = mongoose.model<IBloodRequest>(

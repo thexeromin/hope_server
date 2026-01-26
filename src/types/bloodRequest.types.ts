@@ -14,8 +14,11 @@ export enum BloodGroup {
 export interface IBloodRequest extends Document {
   user: mongoose.Types.ObjectId;
   bloodType: BloodGroup;
-  location: string;
-  city: string;
+  address: string;
+  location: {
+    type: "Point";
+    coordinates: number[]; // [longitude, latitude]
+  };
   phone: string;
   neededBy: Date;
   createdAt: Date;

@@ -1,16 +1,17 @@
-import { Response, Request } from "express";
+import { Response } from "express";
 import BloodRequest from "../models/bloodRequest";
-import { AuthRequest, BloodGroup } from "../types";
+import { AuthRequest } from "../types";
 
 export const createBloodRequest = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { bloodType, location, city, phone, neededBy } = req.body;
+    const { bloodType, address, phone, neededBy, latitude, longitude } =
+      req.body;
 
     // Ensure user didn't send empty strings
-    if (!bloodType || !location || !city || !phone) {
+    if (!bloodType || !address || !phone || !latitude || !longitude) {
       res.status(400).json({
         success: false,
         message: "Please fill in all required fields."
@@ -22,10 +23,13 @@ export const createBloodRequest = async (
     const newRequest = await BloodRequest.create({
       user: req.user!._id,
       bloodType,
-      location,
-      city,
+      address,
       phone,
-      neededBy: neededBy || new Date()
+      neededBy: neededBy || new Date(),
+      location: {
+        type: "Point",
+        coordinates: [parseFloat(longitude), parseFloat(latitude)]
+      }
     });
 
     res.status(201).json({
@@ -50,24 +54,39 @@ export const createBloodRequest = async (
 };
 
 export const getBloodRequests = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { city, bloodType } = req.query;
+    const { radius, bloodType } = req.query;
+    const lng = req.user?.location?.coordinates[0];
+    const lat = req.user?.location?.coordinates[1];
 
     const filter: any = {};
 
-    if (city) {
-      filter.city = { $regex: city, $options: "i" };
-    }
-
+    // Filter by Blood Type (Optional)
     if (bloodType) {
       filter.bloodType = bloodType;
     }
 
+    // Filter by Radius (Geospatial)
+    // If user provides lat/lng, we filter by distance.
+    if (lat && lng) {
+      const distanceInKilometers = Number(radius) || 10; // Default 10km radius
+      const distanceInMeters = distanceInKilometers * 1000;
+
+      filter.location = {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [lng, lat]
+          },
+          $maxDistance: distanceInMeters
+        }
+      };
+    }
+
     const requests = await BloodRequest.find(filter)
-      .sort({ createdAt: -1 })
       .populate("user", "name email avatar")
       .limit(50);
 
@@ -77,10 +96,6 @@ export const getBloodRequests = async (
       data: requests
     });
   } catch (error) {
-    console.error("Get Requests Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error. Could not fetch requests."
-    });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

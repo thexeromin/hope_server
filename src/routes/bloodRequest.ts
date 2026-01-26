@@ -8,6 +8,6 @@ import { isAuthenticated } from "../middleware/isAuthenticated";
 const router = Router();
 
 router.post("/blood-request", isAuthenticated, createBloodRequest);
-router.get("/blood-requests", getBloodRequests);
+router.get("/blood-requests", isAuthenticated, getBloodRequests);
 
 export default router;
