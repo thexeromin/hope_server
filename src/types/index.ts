@@ -6,3 +6,4 @@ export interface AuthRequest extends Request {
 }
 
 export * from "./bloodRequest.types";
+export * from "./chat.types";

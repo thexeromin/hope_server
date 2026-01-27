@@ -4,6 +4,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/user";
 import bloodRequest from "./routes/bloodRequest";
+import chatRoutes from "./routes/chat";
 
 const app = express();
 app.use(cors());
@@ -16,6 +17,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api", bloodRequest);
 
 export default app;

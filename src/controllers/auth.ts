@@ -127,7 +127,8 @@ export const token = async (req: Request, res: Response) => {
   const accessToken = await new jose.SignJWT({
     ...userInfoWithoutExp,
     bloodGroup: user?.bloodGroup,
-    address: user?.address
+    address: user?.address,
+    _id: user._id.toString()
   })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(JWT_EXPIRATION_TIME)
@@ -142,6 +143,7 @@ export const token = async (req: Request, res: Response) => {
     type: "refresh",
     // Include all user information in the refresh token
     // This ensures we have the data when refreshing tokens
+    _id: user._id.toString(),
     name: (userInfo as any).name,
     email: (userInfo as any).email,
     picture: (userInfo as any).picture,
@@ -322,6 +324,8 @@ export const refresh = async (req: Request, res: Response) => {
     // For this example, we'll just ensure the type field is preserved
     if (!hasRequiredUserInfo) {
       // TODO: fetch user from DATABASE using sub(user_id)
+      let user = await User.findOne({ email: (userInfo as any).email });
+      if (!user) return res.status(401).json({ error: "User not found" });
       // In a real implementation, you would fetch the user data from your database
       // using the sub (user ID) as the key
       // For now, we'll just ensure we keep the refresh token type
@@ -331,6 +335,7 @@ export const refresh = async (req: Request, res: Response) => {
         type: "refresh",
         // Add any missing fields that might be needed by the UI
         // These would normally come from your user database
+        _id: user._id.toString(),
         name: userInfo.name || `android-user`,
         email: userInfo.email || `android-user`,
         picture:
