@@ -12,6 +12,7 @@ import {
   REFRESH_TOKEN_EXPIRY
 } from "../utils/constants";
 import User from "../models/user";
+import { AuthRequest } from "../types";
 
 export const authorize = async (req: Request, res: Response) => {
   if (!GOOGLE_CLIENT_ID) {
@@ -315,7 +316,10 @@ export const refresh = async (req: Request, res: Response) => {
     // Check if we have all the required user information
     // If not, we need to add it to ensure ProfileCard works correctly
     const hasRequiredUserInfo =
-      userInfo.name && userInfo.email && userInfo.picture;
+      userInfo.name &&
+      userInfo.email &&
+      userInfo.picture &&
+      userInfo.bloodGroup;
 
     // Create a complete user info object
     let completeUserInfo = { ...userInfo };
@@ -336,10 +340,13 @@ export const refresh = async (req: Request, res: Response) => {
         // Add any missing fields that might be needed by the UI
         // These would normally come from your user database
         _id: user._id.toString(),
+        bloodGroup: user.bloodGroup,
+        address: user.address,
         name: userInfo.name || `android-user`,
         email: userInfo.email || `android-user`,
         picture:
           userInfo.picture ||
+          user.avatar ||
           `https://ui-avatars.com/api/?name=User&background=random`
       };
     }

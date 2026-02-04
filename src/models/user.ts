@@ -30,8 +30,7 @@ const userSchema: Schema<IUser> = new Schema(
     location: {
       type: {
         type: String,
-        enum: ["Point"],
-        default: "Point"
+        enum: ["Point"]
       },
       coordinates: {
         type: [Number], // [longitude, latitude]

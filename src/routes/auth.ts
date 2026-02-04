@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authorize, callback, token, refresh } from "../controllers/auth";
 import multer from "multer";
+import { authorize, callback, token, refresh } from "../controllers/auth";
 
 const router = Router();
 const upload = multer();
