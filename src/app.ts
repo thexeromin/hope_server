@@ -18,6 +18,6 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
-app.use("/api", bloodRequest);
+app.use("/api/blood-requests", bloodRequest);
 
 export default app;

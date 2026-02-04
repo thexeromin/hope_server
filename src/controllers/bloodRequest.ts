@@ -1,6 +1,6 @@
 import { Response } from "express";
 import BloodRequest from "../models/bloodRequest";
-import { AuthRequest } from "../types";
+import { AuthRequest, RequestStatus } from "../types";
 
 export const createBloodRequest = async (
   req: AuthRequest,
@@ -86,6 +86,8 @@ export const getBloodRequests = async (
       };
     }
 
+    filter.status = RequestStatus.ACTIVE;
+
     const requests = await BloodRequest.find(filter)
       .populate("user", "name email avatar")
       .limit(50);
@@ -97,5 +99,98 @@ export const getBloodRequests = async (
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getMyRequests = async (req: AuthRequest, res: Response) => {
+  try {
+    const currentUserId = req.user?._id;
+
+    // Fetch ALL requests (active & fulfilled) for this user
+    const requests = await BloodRequest.find({ user: currentUserId })
+      .sort({ createdAt: -1 }) // Newest first
+      .populate("user", "name avatar");
+
+    res.status(200).json({
+      success: true,
+      count: requests.length,
+      data: requests
+    });
+  } catch (error) {
+    console.error("Get My Requests Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const updateRequestStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const { status } = req.body; // Expect { status: "fulfilled" } or "active"
+    const requestId = req.params.id;
+    const currentUserId = req.user!._id;
+
+    // 1. Find the request
+    const request = await BloodRequest.findById(requestId);
+
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    // 2. Check Ownership (Crucial Security Step)
+    if (request.user.toString() !== currentUserId.toString()) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to update this request"
+      });
+    }
+
+    // 3. Update & Save
+    if (status) request.status = status;
+    await request.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Request marked as ${status}`,
+      data: request
+    });
+  } catch (error) {
+    console.error("Update Status Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const deleteRequest = async (req: AuthRequest, res: Response) => {
+  try {
+    const requestId = req.params.id;
+    const currentUserId = req.user!._id;
+
+    const request = await BloodRequest.findById(requestId);
+
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    // Check Ownership
+    if (request.user.toString() !== currentUserId.toString()) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to delete this request"
+      });
+    }
+
+    // Perform Delete
+    await request.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Request deleted successfully",
+      id: requestId
+    });
+  } catch (error) {
+    console.error("Delete Request Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };

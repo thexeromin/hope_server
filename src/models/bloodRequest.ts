@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-import { IBloodRequest, BloodGroup } from "../types";
+import { IBloodRequest, BloodGroup, RequestStatus } from "../types";
 
 const BloodRequestSchema = new Schema<IBloodRequest>(
   {
@@ -23,7 +23,13 @@ const BloodRequestSchema = new Schema<IBloodRequest>(
       }
     },
     phone: { type: String, required: true },
-    neededBy: { type: Date, default: Date.now }
+    neededBy: { type: Date, default: Date.now },
+    status: {
+      type: String,
+      enum: Object.values(RequestStatus),
+      default: RequestStatus.ACTIVE,
+      required: true
+    }
   },
   { timestamps: true }
 );

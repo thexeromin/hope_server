@@ -11,6 +11,11 @@ export enum BloodGroup {
   O_NEG = "O-"
 }
 
+export enum RequestStatus {
+  ACTIVE = "active",
+  FULFILLED = "fulfilled"
+}
+
 export interface IBloodRequest extends Document {
   user: mongoose.Types.ObjectId;
   bloodType: BloodGroup;
@@ -20,6 +25,7 @@ export interface IBloodRequest extends Document {
     coordinates: number[]; // [longitude, latitude]
   };
   phone: string;
+  status: RequestStatus;
   neededBy: Date;
   createdAt: Date;
 }
