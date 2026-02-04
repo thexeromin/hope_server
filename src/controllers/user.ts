@@ -109,57 +109,79 @@ export const logDonation = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const searchUsers = async (
-  req: Request<{}, {}, {}, SearchQuery>,
-  res: Response
-) => {
+export const findDonors = async (req: AuthRequest, res: Response) => {
   try {
-    const { bloodGroup, lat, lon, radius = "2" } = req.query;
+    const { lat, lng, radius, bloodGroup } = req.query;
+    const currentUser = req.user;
 
-    if (!lat || !lon) {
-      return res
-        .status(400)
-        .json({ error: "Latitude and longitude are required" });
+    let centerLat: number;
+    let centerLng: number;
+
+    // Resolve location
+
+    // Priority A: Did the frontend send live GPS?
+    if (lat && lng) {
+      centerLat = parseFloat(lat as string);
+      centerLng = parseFloat(lng as string);
+    }
+    // Priority B: Does the logged-in user have a saved location?
+    else if (
+      currentUser?.location &&
+      currentUser.location.coordinates &&
+      currentUser.location.coordinates.length === 2
+    ) {
+      centerLng = currentUser.location.coordinates[0];
+      centerLat = currentUser.location.coordinates[1];
+    } else {
+      return res.status(400).json({
+        success: false,
+        code: "LOCATION_MISSING",
+        message:
+          "We need your location to find donors. Please enable GPS or update your profile address."
+      });
     }
 
-    const center: [number, number] = [parseFloat(lon), parseFloat(lat)];
-    const distance = parseFloat(radius) * 1000; // convert km -> meters
+    // Perform search
 
-    // Convert comma-separated blood groups into an array (if present)
-    let bloodGroups: string[] | undefined = undefined;
-    if (bloodGroup) {
-      bloodGroups = bloodGroup.split(",").map((bg) => bg.trim().toUpperCase());
-    }
+    const searchRadiusKm = parseFloat(radius as string) || 10; // Default 10km radius
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-    const match: any = {};
-    if (bloodGroups && bloodGroups.length > 0) {
-      match.bloodGroup = { $in: bloodGroups };
-    }
+    const query: any = {
+      _id: { $ne: currentUser?._id }, // Don't show myself
 
-    const users = await User.aggregate([
-      {
-        $geoNear: {
-          near: { type: "Point", coordinates: center },
-          distanceField: "distance",
-          spherical: true,
-          maxDistance: distance,
-          query: match
+      location: {
+        $geoWithin: {
+          $centerSphere: [
+            [centerLng, centerLat],
+            searchRadiusKm / 6378.1 // Earth radius logic
+          ]
         }
       },
-      {
-        $project: {
-          name: 1,
-          email: 1,
-          bloodGroup: 1,
-          distance: { $divide: ["$distance", 1000] } // convert meters -> km
-        }
-      },
-      { $sort: { distance: 1 } } // nearest first
-    ]);
 
-    res.json({ count: users.length, users });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to search users" });
+      // Eligibility Check
+      $or: [
+        { lastDonated: { $exists: false } },
+        { lastDonated: null },
+        { lastDonated: { $lte: threeMonthsAgo } }
+      ]
+    };
+
+    if (bloodGroup && bloodGroup !== "All") {
+      query.bloodGroup = bloodGroup;
+    }
+
+    const donors = await User.find(query)
+      .select("name email bloodGroup address location avatar lastDonated")
+      .limit(50);
+
+    return res.status(200).json({
+      success: true,
+      count: donors.length,
+      data: donors
+    });
+  } catch (error) {
+    console.error("Find Donors Error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
