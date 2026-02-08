@@ -1,17 +1,9 @@
-/**
- * Application Constants
- *
- * This file centralizes all constants used across the application.
- * Import from this file instead of defining constants in individual files.
- */
 import dotenv from "dotenv";
 
-// Authentication Constants
 dotenv.config();
-export const COOKIE_NAME = "auth_token";
-export const REFRESH_COOKIE_NAME = "refresh_token";
-export const COOKIE_MAX_AGE = 20; // 20 seconds
-export const JWT_EXPIRATION_TIME = "15m"; // 20 seconds
+
+// Authentication Constants
+export const JWT_EXPIRATION_TIME = "15m"; // 15 minutes
 export const REFRESH_TOKEN_EXPIRY = "30d"; // 30 days
 export const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
 
@@ -21,10 +13,10 @@ export const REFRESH_BEFORE_EXPIRY_SEC = 60; // Refresh token 1 minute before ex
 // Google OAuth Constants
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
-export const GOOGLE_REDIRECT_URI = `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/callback`;
+export const GOOGLE_REDIRECT_URI = `${process.env.SERVER_URL}/api/auth/callback`;
 export const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
 // Environment Constants
-export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
-export const APP_SCHEME = process.env.EXPO_PUBLIC_SCHEME;
+export const BASE_URL = process.env.SERVER_URL;
+export const APP_SCHEME = process.env.APP_SCHEME;
 export const JWT_SECRET = process.env.JWT_SECRET!;

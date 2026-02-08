@@ -116,7 +116,7 @@ export const token = async (req: Request, res: Response) => {
   const { exp, ...userInfoWithoutExp } = userInfo as any;
 
   // User id
-  const sub = (userInfo as { sub: string }).sub;
+  const sub = user._id.toString();
 
   // Current timestamp in seconds
   const issuedAt = Math.floor(Date.now() / 1000);
@@ -327,18 +327,14 @@ export const refresh = async (req: Request, res: Response) => {
     // If we're missing user info, try to fetch it from a user database or service
     // For this example, we'll just ensure the type field is preserved
     if (!hasRequiredUserInfo) {
-      // TODO: fetch user from DATABASE using sub(user_id)
       let user = await User.findOne({ email: (userInfo as any).email });
       if (!user) return res.status(401).json({ error: "User not found" });
-      // In a real implementation, you would fetch the user data from your database
-      // using the sub (user ID) as the key
-      // For now, we'll just ensure we keep the refresh token type
+
       completeUserInfo = {
         ...userInfo,
         // Preserve the refresh token type
         type: "refresh",
-        // Add any missing fields that might be needed by the UI
-        // These would normally come from your user database
+        // Missing fields that might be needed by the UI
         _id: user._id.toString(),
         bloodGroup: user.bloodGroup,
         address: user.address,

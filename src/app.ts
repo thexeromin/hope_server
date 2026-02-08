@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import helmet from "helmet";
 
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/user";
@@ -7,6 +8,8 @@ import bloodRequest from "./routes/bloodRequest";
 import chatRoutes from "./routes/chat";
 
 const app = express();
+
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
