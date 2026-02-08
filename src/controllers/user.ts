@@ -5,22 +5,6 @@ interface AuthRequest extends Request {
   user?: IUser;
 }
 
-// TODO: make this proper type
-// interface UserSetupData {
-//   bloodGroup?: string;
-//   location?: {
-//     lat: number;
-//     lon: number;
-//   };
-// }
-
-interface SearchQuery {
-  bloodGroup?: string; // can be comma-separated like "O+,A+"
-  lat?: string;
-  lon?: string;
-  radius?: string; // in km
-}
-
 export const setupUser = async (req: AuthRequest, res: Response) => {
   try {
     const { bloodGroup, location, address } = req.body;
@@ -183,5 +167,31 @@ export const findDonors = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error("Find Donors Error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const updatePushToken = async (req: AuthRequest, res: Response) => {
+  try {
+    const { pushToken } = req.body;
+    const userId = req.user!._id;
+
+    if (!pushToken) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Token required" });
+    }
+
+    // Prevents duplicate tokens for the same device
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: { pushTokens: pushToken }
+    });
+
+    res.json({ success: true, message: "Push token registered" });
+  } catch (error: any) {
+    console.error("Token Update Error:", error);
+    res.status(500).json({
+      success: false,
+      error: error?.message || "Something went wrong in update push token"
+    });
   }
 };

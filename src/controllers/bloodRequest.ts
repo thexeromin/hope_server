@@ -1,5 +1,7 @@
 import { Response } from "express";
 import BloodRequest from "../models/bloodRequest";
+import User from "../models/user";
+import { sendPushNotifications } from "../services/notificationService";
 import { AuthRequest, RequestStatus } from "../types";
 
 export const createBloodRequest = async (
@@ -37,6 +39,33 @@ export const createBloodRequest = async (
       message: "Blood request created successfully",
       data: newRequest
     });
+
+    // Find Donors (Background)
+    const nearbyDonors = await User.find({
+      location: {
+        $near: {
+          $geometry: { type: "Point", coordinates: [longitude, latitude] },
+          $maxDistance: 5000
+        }
+      },
+      bloodGroup: bloodType,
+      _id: { $ne: req.user!._id },
+      pushTokens: { $exists: true, $not: { $size: 0 } }
+    });
+
+    const allTokens: string[] = nearbyDonors
+      .map((user) => user.pushTokens)
+      .flat();
+
+    if (allTokens.length > 0) {
+      // Fire & Forget
+      sendPushNotifications(
+        allTokens,
+        "URGENT: Blood Needed Nearby!",
+        `Someone near you needs ${bloodType} blood. Tap to help.`,
+        { requestId: newRequest._id, screen: "donate" }
+      );
+    }
   } catch (error: any) {
     console.error("Create Request Error:", error);
 

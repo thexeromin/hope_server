@@ -3,7 +3,8 @@ import {
   setupUser,
   findDonors,
   getUserStats,
-  logDonation
+  logDonation,
+  updatePushToken
 } from "../controllers/user";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 
@@ -13,5 +14,6 @@ router.post("/setup", isAuthenticated, setupUser);
 router.get("/find-donors", isAuthenticated, findDonors);
 router.get("/stats", isAuthenticated, getUserStats);
 router.post("/donate", isAuthenticated, logDonation);
+router.put("/push-token", isAuthenticated, updatePushToken);
 
 export default router;

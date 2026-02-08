@@ -13,6 +13,7 @@ export interface IUser extends Document {
     type: "Point";
     coordinates: [number, number]; // [longitude, latitude]
   };
+  pushTokens: string[];
 }
 
 const userSchema: Schema<IUser> = new Schema(
@@ -36,6 +37,10 @@ const userSchema: Schema<IUser> = new Schema(
         type: [Number], // [longitude, latitude]
         index: "2dsphere" // required for geo search
       }
+    },
+    pushTokens: {
+      type: [String],
+      default: []
     }
   },
   { timestamps: true }
