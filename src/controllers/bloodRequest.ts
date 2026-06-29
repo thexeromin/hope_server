@@ -87,9 +87,15 @@ export const getBloodRequests = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { radius, bloodType } = req.query;
-    const lng = req.user?.location?.coordinates[0];
-    const lat = req.user?.location?.coordinates[1];
+    const { radius, bloodType, lat: queryLat, lng: queryLng } = req.query;
+
+    // Prefer the live location sent by the client, fallback to profile location
+    const lng = queryLng
+      ? Number(queryLng)
+      : req.user?.location?.coordinates[0];
+    const lat = queryLat
+      ? Number(queryLat)
+      : req.user?.location?.coordinates[1];
 
     const filter: any = {};
 
